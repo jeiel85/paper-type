@@ -16,7 +16,7 @@
 - [x] app-owned undo/redo (조합 1개 = 1 group)
 - [x] autosave IndexedDB + recovery snapshot
 - [x] reduced motion / sound off
-- [ ] prototype QA checklist — 자동화(E2E·성능)는 완료, 실제 OS IME·모바일 실기기 수동 매트릭스(`docs/08` §2–3) 진행 필요
+- [ ] prototype QA checklist — 자동화(E2E·성능) 완료. 2026-10-07 Galaxy Tab(SM-X110, Android 16) Chrome + Samsung 키보드로 `안녕 값 닭`, 조합 중 Backspace, 새로고침 복구, 가상 키보드 열림/닫힘 시 타점 위치 확인. 남은 것: Windows 한글 IME, Gboard, Samsung Internet, iOS Safari(`docs/08` §2–3)
 
 **Exit:** `docs/08` §1 Gate P0 8개 항목을 통과하고, “타이핑이 즐겁다”는 내부 기준을 충족한다.
 

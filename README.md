@@ -51,7 +51,7 @@ PaperType의 가치는 메모 기능의 양이 아니라 **타이핑하는 순�
 
 | Gate P0 | 상태 | 확인 방법 |
 | --- | :-: | --- |
-| 한글/영문 입력, 조합 중 Backspace, 선택 영역 교체 | 🟡 | E2E(Chromium CDP 조합 시뮬레이션) 통과 · 실제 OS IME 수동 매트릭스는 진행 예정 |
+| 한글/영문 입력, 조합 중 Backspace, 선택 영역 교체 | 🟡 | E2E(Chromium CDP 조합 시뮬레이션) 통과 · Galaxy Tab 실기기 Chrome + Samsung 키보드로 복합 받침·조합 중 Backspace 확인 · Windows 한글 IME, Gboard, Samsung Internet 수동 확인 남음 |
 | 붙여넣기·삭제·undo/redo (조합 1개 = undo 1번) | ✅ | 단위 + E2E |
 | 타점 고정, 종이 이동 | ✅ | E2E |
 | 결정적 잉크 (`fixtures/ink-seed-v1.json`) | ✅ | 독립 Python 참조 구현과 비트 단위 일치 |
