@@ -17,6 +17,21 @@ for (const size of [3000, 10000]) {
     await page.keyboard.insertText(text.slice(0, size));
     await page.waitForTimeout(800);
 
+    // Warm-up: the first strikes pay one-off costs (layer creation, first animations).
+    // They are reported separately so the steady-state numbers stay comparable.
+    await page.evaluate(() => {
+      const w = window as unknown as { __warm: number[] };
+      w.__warm = [];
+      new PerformanceObserver((list) => {
+        for (const e of list.getEntries()) w.__warm.push(e.duration);
+      }).observe({ type: 'longtask' });
+    });
+    for (let i = 0; i < 10; i++) {
+      await page.keyboard.press('b', { delay: 10 });
+      await page.waitForTimeout(70);
+    }
+    const warmLongTasks = await page.evaluate(() => (window as unknown as { __warm: number[] }).__warm.slice());
+
     await page.evaluate(() => {
       const w = window as unknown as { __perf: { frames: number[]; longTasks: number[] } };
       w.__perf = { frames: [], longTasks: [] };
@@ -60,7 +75,7 @@ for (const size of [3000, 10000]) {
     latencies.sort((a, b) => a - b);
     const p95 = latencies[Math.floor(latencies.length * 0.95)]!;
     console.log(
-      `[perf] ${size} chars: avg ${fps.toFixed(1)} fps, p95 input→frame ${p95.toFixed(1)} ms, long tasks ${result.longTasks.length} (max ${Math.max(0, ...result.longTasks).toFixed(0)} ms)`,
+      `[perf] ${size} chars: avg ${fps.toFixed(1)} fps, p95 input→frame ${p95.toFixed(1)} ms, long tasks ${result.longTasks.length} (max ${Math.max(0, ...result.longTasks).toFixed(0)} ms); warm-up long tasks [${warmLongTasks.map((d) => d.toFixed(0)).join(', ')}] ms`,
     );
     expect(fps).toBeGreaterThanOrEqual(55);
     expect(result.longTasks.filter((d) => d > 50).length).toBeLessThanOrEqual(2);

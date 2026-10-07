@@ -84,7 +84,11 @@ Chromium에서는 CDP `Input.imeSetComposition`/`Input.insertText`로 compositio
 ### 측정 방법 (P0)
 `PERF=1 npx playwright test perf` — 3천/1만 자 문서에서 200타(Enter·Backspace 섞음)를 초당 약 12타로 입력하며 rAF 간격(fps), long task, `beforeinput` → 두 번째 rAF까지의 시간을 잰다. 마지막 값은 측정 방식상 한 프레임을 더 포함하므로 실제 "입력→화면 반영"보다 약 16ms 크다. headless Chromium 기준이라 실기기 수치를 대신하지 않는다.
 
-2026-10-07 측정(Windows, headless Chromium): 3천 자 58.6~59.9fps, 1만 자 57.7~59.6fps, long task 0, p95 37~42ms(한 프레임 포함). 첫 키 입력에서 오디오 장치를 여는 179ms long task가 있었고, 오디오를 유휴 시간에 미리 준비하도록 바꿔 없앴다.
+처음 10타는 워밍업으로 따로 재고(일회성 비용), 그 뒤 200타를 정상 상태로 잰다.
+
+2026-10-07 측정(Windows, headless Chromium):
+- 타자기 장치 도입 전: 3천 자 58.6~59.9fps, 1만 자 57.7~59.6fps, long task 0. 첫 키 입력에서 오디오 장치를 여는 179ms long task → 오디오를 유휴 시간에 미리 준비해 제거.
+- 타자기 장치(타이프바·리본·stamp) 도입 후 처음에는 3천 자 52.8~60fps로 흔들리고 첫 타건에 64~97ms long task가 생겼다. stamp를 280→160ms로 줄이고, 타이프바 그림자를 없애고, 부채꼴 기준점 측정을 resize 때로 옮기고, 타건 애니메이션을 유휴 시간에 예열한 뒤: 3천 자 58.2~59.9fps, 1만 자 59.4~60.0fps, 워밍업 long task 0, 정상 상태 long task 0~1(58ms, 반복 없음), p95 31~32ms(한 프레임 포함).
 
 3000자를 제품 제한으로 반드시 둘 필요는 없다. PaperType은 내부 성능이 허용하는 범위에서 더 긴 글도 지원할 수 있도록 설계하되, 성능 테스트로 실제 제한을 결정한다.
 

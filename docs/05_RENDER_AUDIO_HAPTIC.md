@@ -66,8 +66,9 @@ seed hash(§2.1)와 preset 값(§2.2)을 고정해 export 재현성을 확보한
 
 ## 5. 움직임
 ### Key press
-- 2~4px 미만의 capsule/rail recoil
-- 70~100ms
+- 타이프바가 부채꼴에서 타점까지 튀어 올랐다 돌아감(140ms, 올라갈 때 ease-in·내려올 때 ease-out), 리본이 함께 올라옴
+- 방금 찍힌 글자 stamp(160ms). text-shadow 애니메이션은 매 프레임 다시 그리므로 짧게 유지한다
+- 캐리지는 90ms ease-out으로 한 칸 이동
 
 ### Space
 - 미세한 paper slide

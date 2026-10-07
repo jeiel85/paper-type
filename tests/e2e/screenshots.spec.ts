@@ -26,3 +26,21 @@ for (const [name, viewport] of [
     await page.screenshot({ path: `docs/screenshots/${name}.png` });
   });
 }
+
+test('writer-strike', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto('/');
+  await expect(page.locator('.type-input')).toBeFocused();
+  await page.keyboard.insertText('Dear reader,\n종이 위에 한 글자씩 찍히는 소리');
+  await page.evaluate(() => document.fonts.ready);
+  await page.waitForTimeout(500);
+  await page.keyboard.press('k');
+  // Freeze the strike at the moment the typebar hits the paper (50% of its 140ms swing).
+  await page.evaluate(() =>
+    document.getAnimations().forEach((a) => {
+      a.pause();
+      a.currentTime = 66;
+    }),
+  );
+  await page.screenshot({ path: 'docs/screenshots/writer-strike.png', clip: { x: 340, y: 300, width: 600, height: 420 } });
+});

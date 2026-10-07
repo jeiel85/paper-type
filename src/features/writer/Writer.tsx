@@ -19,6 +19,7 @@ import { DEFAULT_PREFS, loadLatestNote, loadPrefs, saveNote, savePrefs, type Wri
 import { clearSnapshot, pickRecoveredText, readSnapshot, writeSnapshot } from '../../core/storage/recovery';
 import { InkLayer } from './InkLayer';
 import { editKindFor, motionFor, soundFor, type Motion } from './inputKinds';
+import { FAN_BARS, FAN_PIVOT_DEPTH, fanAngle, Machine, type MachineRefs } from './Machine';
 import { StatusBar } from './StatusBar';
 
 type Boot = { note: Note; text: string; recovered: boolean; prefs: WriterPrefs; storageOk: boolean };
@@ -73,14 +74,58 @@ function offsetWithin(el: HTMLElement, ancestor: HTMLElement) {
 }
 
 const PAPER_GUTTER = 16;
+
+type Point = { x: number; y: number };
+
+const lastCodePoint = (data: string | null) => {
+  const chars = Array.from(data ?? '');
+  return chars.length ? chars[chars.length - 1]!.codePointAt(0)! : 0;
+};
+
+/** One key strike: a typebar swings up from the basket to the strike point while the ribbon lifts. */
+function strike(parts: MachineRefs, codePoint: number, pivot: Point, target: Point, lineHeight: number) {
+  const bar = parts.typebar.current;
+  if (bar) {
+    const length = Math.hypot(target.x - pivot.x, pivot.y - target.y);
+    const hit = (Math.atan2(target.x - pivot.x, pivot.y - target.y) * 180) / Math.PI;
+    const rest = fanAngle(codePoint % FAN_BARS);
+    bar.style.height = `${length}px`;
+    const at = `translate(${pivot.x - 1.5}px, ${pivot.y - length}px)`;
+    bar.animate(
+      [
+        // Accelerates into the paper, then falls back to the basket.
+        { transform: `${at} rotate(${rest}deg)`, opacity: 0, easing: 'ease-in' },
+        { transform: `${at} rotate(${(rest + hit) / 2}deg)`, opacity: 1, offset: 0.3, easing: 'ease-in' },
+        { transform: `${at} rotate(${hit}deg)`, opacity: 1, offset: 0.5, easing: 'ease-out' },
+        { transform: `${at} rotate(${rest}deg)`, opacity: 0 },
+      ],
+      { duration: 140 },
+    );
+  }
+  parts.ribbon.current?.animate(
+    [
+      { transform: 'translateY(0)', easing: 'ease-out' },
+      { transform: `translateY(${-lineHeight * 0.55}px)`, offset: 0.45, easing: 'ease-in' },
+      { transform: 'translateY(0)' },
+    ],
+    { duration: 140 },
+  );
+}
 const BELL_AT = 0.88;
 
 function WriterSurface({ note: initialNote, text: initialText, recovered, prefs: initialPrefs, storageOk }: Boot) {
   const taRef = useRef<HTMLTextAreaElement>(null);
   const paperRef = useRef<HTMLDivElement>(null);
   const typeAreaRef = useRef<HTMLDivElement>(null);
-  const railRef = useRef<HTMLDivElement>(null);
-  const pointerRef = useRef<HTMLDivElement>(null);
+  const machine: MachineRefs = {
+    carriageBack: useRef<HTMLDivElement>(null),
+    carriageFront: useRef<HTMLDivElement>(null),
+    body: useRef<HTMLDivElement>(null),
+    guide: useRef<HTMLDivElement>(null),
+    ribbon: useRef<HTMLDivElement>(null),
+    typebar: useRef<HTMLDivElement>(null),
+  };
+  const machineRef = useRef(machine);
 
   const noteRef = useRef(initialNote);
   const docTextRef = useRef(initialText);
@@ -90,6 +135,10 @@ function WriterSurface({ note: initialNote, text: initialText, recovered, prefs:
   const motionRef = useRef<Motion>('none');
   const reviewRef = useRef(0);
   const typedRef = useRef(false);
+  /** Code point of the key striking now, or null when the last input was not a character key. */
+  const strikeRef = useRef<number | null>(null);
+  const strikeCountRef = useRef(0);
+  const pivotDepthRef = useRef(FAN_PIVOT_DEPTH);
   const bellLineRef = useRef('');
 
   const history = useMemo(() => new EditHistory(), []);
@@ -98,6 +147,8 @@ function WriterSurface({ note: initialNote, text: initialText, recovered, prefs:
   const [viewText, setViewText] = useState(initialText);
   const [caret, setCaret] = useState(initialText.length);
   const [composition, setComposition] = useState<{ start: number; end: number } | null>(null);
+  /** The glyph just struck (it ends at `at`), stamped in with a short animation. */
+  const [fresh, setFresh] = useState<{ at: number; n: number } | null>(null);
   const [saveState, setSaveState] = useState<SaveState>(recovered ? 'dirty' : 'clean');
   const [prefs, setPrefs] = useState(initialPrefs);
   const [systemReducedMotion, setSystemReducedMotion] = useState(
@@ -148,10 +199,13 @@ function WriterSurface({ note: initialNote, text: initialText, recovered, prefs:
   const layout = useCallback(() => {
     const paper = paperRef.current;
     const typeArea = typeAreaRef.current;
-    const rail = railRef.current;
-    const pointer = pointerRef.current;
+    const parts = machineRef.current;
+    const back = parts.carriageBack.current;
+    const front = parts.carriageFront.current;
+    const body = parts.body.current;
+    const guide = parts.guide.current;
     const marker = typeArea?.querySelector<HTMLElement>('[data-caret]');
-    if (!paper || !typeArea || !rail || !pointer || !marker) return;
+    if (!paper || !typeArea || !back || !front || !body || !guide || !marker) return;
 
     const vv = window.visualViewport;
     const vw = window.innerWidth;
@@ -163,35 +217,68 @@ function WriterSurface({ note: initialNote, text: initialText, recovered, prefs:
     const caretX = m.x;
     const caretCenterY = m.y + (marker.offsetHeight || lineHeight) / 2;
 
-    const paperLeft = (vw - paper.offsetWidth) / 2;
+    const paperWidth = paper.offsetWidth;
+    const paperLeft = (vw - paperWidth) / 2;
     const strikeX = vw / 2;
-    const strikeY = vTop + clamp(vh * 0.42, 96, Math.max(96, vh - 140));
+    const strikeY = vTop + clamp(vh * 0.55, 120, Math.max(120, vh - 170));
 
+    // The caret stays on the strike point and the carriage moves instead, as far as the
+    // sheet can go without leaving the screen (docs/02 §5.1). Wide screens therefore
+    // behave like a real typewriter; narrow ones fall back to the hybrid behaviour.
     const reduced = reduceMotionRef.current;
-    const tx = reduced ? 0 : clamp(strikeX - (paperLeft + caretX), -Math.max(0, paperLeft - PAPER_GUTTER), 0);
+    const tx = reduced
+      ? 0
+      : clamp(
+          strikeX - (paperLeft + caretX),
+          -Math.max(0, paperLeft - PAPER_GUTTER),
+          Math.max(0, vw - PAPER_GUTTER - (paperLeft + paperWidth)),
+        );
     const maxReview = Math.max(0, caretCenterY - lineHeight);
     reviewRef.current = clamp(reviewRef.current, 0, maxReview);
     const ty = strikeY - caretCenterY + reviewRef.current;
 
     const motion = motionRef.current;
-    paper.style.transition =
+    const transition =
       reduced || motion === 'none' || motion === 'review'
         ? 'none'
         : motion === 'return'
-          ? 'transform 300ms cubic-bezier(.2,.75,.25,1)'
+          ? 'transform 320ms cubic-bezier(.2,.75,.25,1)'
           : 'transform 90ms ease-out';
-    paper.style.transform = `translate3d(${paperLeft + tx}px, ${ty}px, 0)`;
+    const carriageX = paperLeft + tx;
+    const platenTop = strikeY + lineHeight * 0.62;
+    const bodyTop = platenTop + 30;
 
-    const railY = strikeY + lineHeight * 0.62;
-    rail.style.transform = `translateY(${railY}px)`;
-    pointer.style.transform = `translateX(${paperLeft + tx + caretX}px)`;
-    pointer.style.transition = paper.style.transition;
+    paper.style.transition = transition;
+    paper.style.transform = `translate3d(${carriageX}px, ${ty}px, 0)`;
+    for (const el of [back, front]) {
+      el.style.transition = transition;
+      el.style.transform = `translate3d(${carriageX}px, ${platenTop}px, 0)`;
+      el.style.width = `${paperWidth}px`;
+    }
+    body.style.transform = `translate3d(0, ${bodyTop}px, 0)`;
+    if (motion === 'none') {
+      // Re-measure the pivot only on resize/initial layout: CSS scales the fan on small screens.
+      const fan = body.querySelector<SVGSVGElement>('.fan');
+      if (fan) pivotDepthRef.current = fan.getBoundingClientRect().bottom - body.getBoundingClientRect().top;
+    }
+    const caretScreenX = carriageX + caretX;
+    guide.style.transition = transition;
+    guide.style.transform = `translate3d(${caretScreenX}px, ${strikeY}px, 0)`;
+
+    const struck = strikeRef.current;
+    strikeRef.current = null;
+    if (struck !== null && !reduced) {
+      strike(
+        parts,
+        struck,
+        { x: strikeX, y: bodyTop + pivotDepthRef.current },
+        { x: caretScreenX - lineHeight * 0.3, y: strikeY },
+        lineHeight,
+      );
+    }
 
     if (typedRef.current) {
       typedRef.current = false;
-      if (!reduced) {
-        pointer.animate([{ translate: '0 0' }, { translate: '0 2px' }, { translate: '0 0' }], { duration: 90, easing: 'ease-out' });
-      }
       const lineWidth = typeArea.clientWidth;
       const lineKey = `${Math.round(m.y)}`;
       if (caretX - typeArea.offsetLeft > lineWidth * BELL_AT && bellLineRef.current !== lineKey) {
@@ -202,7 +289,7 @@ function WriterSurface({ note: initialNote, text: initialText, recovered, prefs:
     motionRef.current = 'none';
   }, [sound]);
 
-  useLayoutEffect(layout, [layout, viewText, caret, composition, reduceMotion]);
+  useLayoutEffect(layout, [layout, viewText, caret, composition, fresh, reduceMotion]);
 
   // ---- editing -------------------------------------------------------------------------
   const commitFromTextarea = useCallback(
@@ -278,6 +365,8 @@ function WriterSurface({ note: initialNote, text: initialText, recovered, prefs:
       reviewRef.current = 0;
       const s = soundFor(e.inputType, e.data);
       if (s) sound.play(s);
+      // Only character keys swing a typebar; space, Backspace and Enter move the carriage.
+      strikeRef.current = s === 'key' ? lastCodePoint(e.data) : null;
     };
 
     const onInput = (e: Event) => {
@@ -285,6 +374,7 @@ function WriterSurface({ note: initialNote, text: initialText, recovered, prefs:
       // Render the typed glyph within this event's task. State set from a native
       // listener would otherwise be scheduled for a later task, sometimes a frame late.
       flushSync(() => {
+        setFresh(strikeRef.current !== null ? { at: ta.selectionEnd, n: ++strikeCountRef.current } : null);
         if (composingRef.current) {
           // Preview only: the uncommitted composition is neither saved nor recorded (docs/04 §3).
           const change = diffText(docTextRef.current, ta.value);
@@ -407,7 +497,15 @@ function WriterSurface({ note: initialNote, text: initialText, recovered, prefs:
     window.addEventListener('keydown', unlock, true);
     perfMonitor?.start();
     // Warm up audio while idle so the first keystroke does not pay for it.
-    const warm = () => sound.prepare();
+    const warm = () => {
+      sound.prepare();
+      // Run each strike animation once, invisibly, so the first real key does not pay
+      // for creating their compositor layers.
+      const parts = machineRef.current;
+      for (const el of [parts.typebar.current, parts.ribbon.current]) {
+        el?.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(1px)' }], { duration: 16 });
+      }
+    };
     const idleId = 'requestIdleCallback' in window ? window.requestIdleCallback(warm, { timeout: 1500 }) : null;
     const timerId = idleId === null ? window.setTimeout(warm, 300) : null;
     return () => {
@@ -477,7 +575,13 @@ function WriterSurface({ note: initialNote, text: initialText, recovered, prefs:
     >
       <div className="paper" ref={paperRef}>
         <div className="type-area" ref={typeAreaRef}>
-          <InkLayer text={viewText} inkSeed={inkSeedOf(noteRef.current)} caret={caret} composition={composition} />
+          <InkLayer
+            text={viewText}
+            inkSeed={inkSeedOf(noteRef.current)}
+            caret={caret}
+            composition={composition}
+            fresh={fresh}
+          />
           <textarea
             ref={taRef}
             className="type-input"
@@ -490,10 +594,7 @@ function WriterSurface({ note: initialNote, text: initialText, recovered, prefs:
           />
         </div>
       </div>
-      <div className="platen" aria-hidden="true" ref={railRef}>
-        <div className="rail" />
-        <div className="strike" ref={pointerRef} />
-      </div>
+      <Machine refs={machine} />
       <StatusBar
         saveState={saveState}
         onRetry={() => void autosave.flush()}

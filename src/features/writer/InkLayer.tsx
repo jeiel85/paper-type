@@ -11,6 +11,8 @@ type InkLayerProps = {
   caret: number;
   /** Uncommitted IME composition, drawn underlined. */
   composition: Range | null;
+  /** The glyph that was just struck ends at `at`; `n` changes on every strike to restart the stamp. */
+  fresh: { at: number; n: number } | null;
 };
 
 /**
@@ -18,7 +20,7 @@ type InkLayerProps = {
  * like the transparent textarea above it — see docs/04 §11.1. Each paragraph is
  * memoised, so typing re-renders only the paragraph being edited.
  */
-export const InkLayer = memo(function InkLayer({ text, inkSeed, caret, composition }: InkLayerProps) {
+export const InkLayer = memo(function InkLayer({ text, inkSeed, caret, composition, fresh }: InkLayerProps) {
   const paragraphs = useMemo(() => splitParagraphs(text), [text]);
   return (
     <div className="ink" aria-hidden="true">
@@ -31,6 +33,7 @@ export const InkLayer = memo(function InkLayer({ text, inkSeed, caret, compositi
           compStart = Math.max(0, composition.start - p.start);
           compEnd = Math.min(p.text.length, composition.end - p.start);
         }
+        const inParagraph = fresh && fresh.at > p.start && fresh.at <= end;
         return (
           <Paragraph
             key={i}
@@ -40,6 +43,8 @@ export const InkLayer = memo(function InkLayer({ text, inkSeed, caret, compositi
             caret={localCaret}
             compStart={compStart}
             compEnd={compEnd}
+            freshEnd={inParagraph ? fresh.at - p.start : -1}
+            freshKey={inParagraph ? fresh.n : 0}
           />
         );
       })}
@@ -54,9 +59,11 @@ type ParagraphProps = {
   caret: number;
   compStart: number;
   compEnd: number;
+  freshEnd: number;
+  freshKey: number;
 };
 
-const Paragraph = memo(function Paragraph({ index, text, inkSeed, caret, compStart, compEnd }: ParagraphProps) {
+const Paragraph = memo(function Paragraph({ index, text, inkSeed, caret, compStart, compEnd, freshEnd, freshKey }: ParagraphProps) {
   const glyphs = useMemo(() => layoutParagraph(text, index, inkSeed, NORMAL_INK), [text, index, inkSeed]);
 
   const nodes: ReactNode[] = [];
@@ -72,10 +79,12 @@ const Paragraph = memo(function Paragraph({ index, text, inkSeed, caret, compSta
       nodes.push(inComposition ? <span key={i} className="comp">{g.text}</span> : g.text);
       continue;
     }
+    const isFresh = g.start + g.text.length === freshEnd;
     nodes.push(
       <span
-        key={i}
-        className={inComposition ? 'g comp' : 'g'}
+        // A new key on every strike remounts the span so the stamp animation runs again.
+        key={isFresh ? `f${freshKey}` : i}
+        className={`g${inComposition ? ' comp' : ''}${isFresh ? ' fresh' : ''}`}
         style={{ left: `${g.ink.dx.toFixed(4)}em`, top: `${g.ink.dy.toFixed(4)}em`, opacity: g.ink.opacity.toFixed(3) }}
       >
         {g.text}
