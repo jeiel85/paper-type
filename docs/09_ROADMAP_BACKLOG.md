@@ -13,10 +13,12 @@
 - [ ] seeded ink prototype
 - [ ] carriage/paper transform
 - [ ] key/space/backspace/enter sound
-- [ ] autosave IndexedDB
+- [ ] app-owned undo/redo (조합 1개 = 1 group)
+- [ ] autosave IndexedDB + recovery snapshot
+- [ ] reduced motion / sound off
 - [ ] prototype QA checklist
 
-**Exit:** “타이핑이 즐겁다”는 내부 기준을 충족하고 IME 오류가 없다.
+**Exit:** `docs/08` §1 Gate P0 8개 항목을 통과하고, “타이핑이 즐겁다”는 내부 기준을 충족한다.
 
 ## Phase 1 — Web MVP
 - [ ] Home

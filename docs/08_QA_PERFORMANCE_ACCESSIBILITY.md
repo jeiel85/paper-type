@@ -2,10 +2,15 @@
 
 ## 1. 품질 게이트
 ### Gate P0 — typing prototype
-- 한글 조합 깨짐 없음
-- paste/delete/selection 정상
-- 입력 중 시각 피드백 체감 지연 없음
-- 새로고침 복구
+P0 통과 기준의 **정본(canonical list)** 이다. README, `IMPLEMENTATION_CHECKLIST.md`, `docs/09` Phase 0은 이 목록을 따른다.
+1. 한글/영문 입력이 깨지지 않는다 (조합 중 Backspace, 선택 영역 한글 교체 포함)
+2. 붙여넣기/삭제/선택 교체/undo·redo가 정상이다 (조합 1개 = undo 1번)
+3. 타점은 고정되고 종이가 이동한다
+4. 같은 글은 다시 그려도 잉크 흔들림이 같다 (`fixtures/ink-seed-v1.json` 통과)
+5. 키/스페이스/백스페이스/엔터 소리가 즉시 나고, 소리를 못 내는 환경에서도 입력은 정상이다
+6. 60Hz에서 평균 55fps 이상, 입력 중 50ms 넘는 long task가 반복되지 않는다
+7. 새로고침·탭 닫기 후 글이 복구된다 (IndexedDB 실패 시 recovery snapshot)
+8. reduced motion과 sound off가 동작한다
 
 ### Gate W1 — Web MVP
 - offline launch
@@ -43,7 +48,8 @@ Unit test:
 - EditOperation
 - selection transform
 - undo grouping
-- deterministic seed
+- deterministic seed (`fixtures/ink-seed-v1.json` + FNV-1a 표준 test vector)
+- schema fixture: `examples/*.json`과 앱이 만든 노트가 `schemas/*.json`을 통과
 
 E2E:
 - typing English
@@ -53,6 +59,7 @@ E2E:
 - backup export/import
 
 실제 한글 조합은 Playwright가 OS IME를 완전히 재현한다고 가정하지 않는다.
+Chromium에서는 CDP `Input.imeSetComposition`/`Input.insertText`로 composition 이벤트 흐름을 흉내 내는 E2E를 두되, 이것은 이벤트 처리 회귀 방지용이며 §3 IME 매트릭스 수동 테스트를 대신하지 않는다.
 
 ## 5. 데이터 안전성 테스트
 - autosave 중 탭 종료

@@ -2,6 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://papertype.local/schema/backup-manifest-v1.json",
   "title": "PaperType Backup Manifest v1",
+  "description": "Unknown top-level fields are allowed so that a newer app can add fields without making older apps reject the backup (forward compatibility). Validators must enable format assertion (e.g. ajv-formats) for date-time to be checked.",
   "type": "object",
   "required": [
     "backupFormatVersion",
@@ -39,13 +40,18 @@
         ],
         "properties": {
           "id": {
-            "type": "string"
+            "type": "string",
+            "minLength": 1
           },
           "path": {
-            "type": "string"
+            "description": "Fixed relative location inside the ZIP. The pattern rules out absolute paths, backslashes and '..' segments.",
+            "type": "string",
+            "pattern": "^notes/[A-Za-z0-9-]+\\.json$"
           },
           "sha256": {
-            "type": "string"
+            "description": "Lowercase hex SHA-256 of the exact file bytes stored at path.",
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
           }
         }
       }
@@ -60,17 +66,20 @@
         ],
         "properties": {
           "id": {
-            "type": "string"
+            "type": "string",
+            "minLength": 1
           },
           "path": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^attachments/[A-Za-z0-9-]+\\.[A-Za-z0-9]{1,8}$"
           },
           "sha256": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
           }
         }
       }
     }
   },
-  "additionalProperties": false
+  "additionalProperties": true
 }

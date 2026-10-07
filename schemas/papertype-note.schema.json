@@ -84,14 +84,52 @@
         "seedAlgorithmVersion": {
           "type": "integer",
           "minimum": 1
+        },
+        "inkSeed": {
+          "description": "Seed source for deterministic ink (see docs/05 §2). Set to the note id at creation and kept when a note is copied under a new id, so a copy looks the same. Falls back to `id` when absent.",
+          "type": "string",
+          "minLength": 1
         }
       },
       "additionalProperties": true
     },
     "correctionMarks": {
+      "description": "Typewriter correction marks (Phase 2 feature). Provisional until the backup schema freeze in Phase 2.",
       "type": "array",
       "items": {
-        "type": "object"
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "at",
+          "originalText",
+          "createdAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kind": {
+            "enum": [
+              "strike"
+            ]
+          },
+          "at": {
+            "description": "UTF-16 offset in the current `text` where the struck-out text is shown.",
+            "type": "integer",
+            "minimum": 0
+          },
+          "originalText": {
+            "type": "string",
+            "minLength": 1
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": true
       }
     },
     "attachments": {
@@ -124,5 +162,6 @@
       "type": "object"
     }
   },
-  "additionalProperties": true
+  "additionalProperties": true,
+  "description": "Validators must enable format assertion (e.g. ajv-formats) for date-time to be checked. Text offsets are UTF-16 code unit offsets into `text` (same unit as JavaScript and Kotlin strings)."
 }

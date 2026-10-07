@@ -12,7 +12,8 @@
     "typeSize": "regular",
     "marginMode": "wide",
     "correctionMode": "clean",
-    "seedAlgorithmVersion": 1
+    "seedAlgorithmVersion": 1,
+    "inkSeed": "2a54a12a-5a75-4f0b-a437-18c353bd86c5"
   },
   "correctionMarks": [],
   "attachments": []

@@ -30,17 +30,12 @@ PaperType의 제품 가치는 메모 기능의 양이 아니라 **타이핑 순�
 | `schemas/papertype-backup-manifest.schema.json` | 백업 manifest 스키마 |
 | `examples/sample-note.json` | 예제 노트 |
 | `examples/sample-backup-manifest.json` | 예제 manifest |
+| `fixtures/ink-seed-v1.json` | 잉크 seed 알고리즘 test vector |
 | `SOURCES.md` | 확인한 외부 출처 |
 
 ## 권장 첫 착수
 전체 앱부터 만들지 말고 `/type` 단일 프로토타입을 먼저 만든다.
 
-**Prototype Gate P0**
-1. 한글/영문 입력이 깨지지 않는다.
-2. 타점은 고정되고 종이가 이동한다.
-3. 글자 잉크 흔들림은 재렌더링 시 고정된다.
-4. 키/스페이스/백스페이스/엔터 사운드가 즉각 반응한다.
-5. 60fps에 근접하고 타이핑 중 프레임 드롭이 체감되지 않는다.
-6. 새로고침 후 글이 복구된다.
+**Prototype Gate P0** — 정본은 `docs/08_QA_PERFORMANCE_ACCESSIBILITY.md` §1 (8개 항목).
 
 이 게이트가 통과되기 전에는 장식, 검색, 월별 보관함을 확장하지 않는다.
