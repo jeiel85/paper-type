@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "2a54a12a-5a75-4f0b-a437-18c353bd86c5",
+  "createdAt": "2026-10-07T02:00:00Z",
+  "updatedAt": "2026-10-07T02:03:30Z",
+  "deletedAt": null,
+  "title": "첫 번째 종이",
+  "text": "오늘은 종이 위에 천천히 문장을 적어 본다.\n디지털이지만 조금은 오래된 기계처럼.",
+  "paperPresetId": "classic-ivory",
+  "inkPresetId": "normal",
+  "writerSettings": {
+    "typeSize": "regular",
+    "marginMode": "wide",
+    "correctionMode": "clean",
+    "seedAlgorithmVersion": 1
+  },
+  "correctionMarks": [],
+  "attachments": []
+}

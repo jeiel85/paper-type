@@ -1,0 +1,15 @@
+{
+  "backupFormatVersion": 1,
+  "createdAt": "2026-10-07T02:05:00Z",
+  "appVersion": "0.1.0",
+  "noteCount": 1,
+  "attachmentCount": 0,
+  "notes": [
+    {
+      "id": "2a54a12a-5a75-4f0b-a437-18c353bd86c5",
+      "path": "notes/2a54a12a-5a75-4f0b-a437-18c353bd86c5.json",
+      "sha256": "<sha256-of-note-file>"
+    }
+  ],
+  "attachments": []
+}

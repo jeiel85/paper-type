@@ -1,0 +1,128 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://papertype.local/schema/note-v1.json",
+  "title": "PaperType Note v1",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "id",
+    "createdAt",
+    "updatedAt",
+    "text",
+    "paperPresetId",
+    "inkPresetId",
+    "writerSettings"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "deletedAt": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "title": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 300
+    },
+    "text": {
+      "type": "string"
+    },
+    "paperPresetId": {
+      "type": "string"
+    },
+    "inkPresetId": {
+      "type": "string"
+    },
+    "writerSettings": {
+      "type": "object",
+      "required": [
+        "typeSize",
+        "marginMode",
+        "correctionMode",
+        "seedAlgorithmVersion"
+      ],
+      "properties": {
+        "typeSize": {
+          "enum": [
+            "small",
+            "regular",
+            "large",
+            "larger"
+          ]
+        },
+        "marginMode": {
+          "enum": [
+            "wide",
+            "narrow"
+          ]
+        },
+        "correctionMode": {
+          "enum": [
+            "clean",
+            "typewriter"
+          ]
+        },
+        "seedAlgorithmVersion": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "additionalProperties": true
+    },
+    "correctionMarks": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "attachments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "kind"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "image"
+            ]
+          },
+          "fileName": {
+            "type": "string"
+          },
+          "mimeType": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "platformExtensions": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": true
+}
