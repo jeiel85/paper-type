@@ -11,6 +11,7 @@ type Props = {
   reduceMotion: boolean;
   systemReducedMotion: boolean;
   onToggleMotion: () => void;
+  charCount: number;
 };
 
 const LABEL: Record<SaveState, string> = {
@@ -36,6 +37,8 @@ export function StatusBar(props: Props) {
         Paper<span>Type</span>
       </div>
       <div className="topbar-right">
+        {/* Up here rather than at the bottom: with a virtual keyboard open the bottom edge is the strike point. */}
+        <span className="char-count">{props.charCount.toLocaleString('ko-KR')}자</span>
         <div className={`save save-${saveState}`} role="status" aria-live="polite">
           <span className="save-dot" aria-hidden="true" />
           <span className="save-label">{LABEL[saveState]}</span>

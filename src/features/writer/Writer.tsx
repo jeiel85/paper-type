@@ -605,10 +605,8 @@ function WriterSurface({ note: initialNote, text: initialText, recovered, prefs:
         reduceMotion={prefs.reduceMotion}
         systemReducedMotion={systemReducedMotion}
         onToggleMotion={() => updatePrefs({ reduceMotion: !prefs.reduceMotion })}
+        charCount={charCount}
       />
-      <div className="char-count" aria-live="off">
-        {charCount.toLocaleString('ko-KR')}자
-      </div>
       {perf && (
         <div className="perf-hud" aria-hidden="true">
           {perf.fps} fps · input→frame {perf.inputLatencyMs ?? '–'} ms · long tasks {perf.longTasks}
