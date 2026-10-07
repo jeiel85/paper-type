@@ -4,19 +4,19 @@
 **목표:** 한 장의 종이에서 입력 감각 검증.
 
 ### P0 tasks
-- [ ] Vite + React + TS bootstrap
-- [ ] `/type` route
-- [ ] native editable layer
-- [ ] composition event logger (개발용, 본문 외부 전송 없음)
-- [ ] 한글 input transaction
-- [ ] paper surface 1종
-- [ ] seeded ink prototype
-- [ ] carriage/paper transform
-- [ ] key/space/backspace/enter sound
-- [ ] app-owned undo/redo (조합 1개 = 1 group)
-- [ ] autosave IndexedDB + recovery snapshot
-- [ ] reduced motion / sound off
-- [ ] prototype QA checklist
+- [x] Vite + React + TS bootstrap
+- [x] `/type` route — P0는 화면이 하나뿐이라 앱 루트가 곧 타이핑 화면이다. 라우터는 Home이 생기는 Phase 1에서 도입
+- [x] native editable layer
+- [x] composition event logger (개발용, 본문 외부 전송 없음)
+- [x] 한글 input transaction
+- [x] paper surface 1종
+- [x] seeded ink prototype
+- [x] carriage/paper transform
+- [x] key/space/backspace/enter sound
+- [x] app-owned undo/redo (조합 1개 = 1 group)
+- [x] autosave IndexedDB + recovery snapshot
+- [x] reduced motion / sound off
+- [ ] prototype QA checklist — 자동화(E2E·성능)는 완료, 실제 OS IME·모바일 실기기 수동 매트릭스(`docs/08` §2–3) 진행 필요
 
 **Exit:** `docs/08` §1 Gate P0 8개 항목을 통과하고, “타이핑이 즐겁다”는 내부 기준을 충족한다.
 

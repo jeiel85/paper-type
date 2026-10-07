@@ -139,6 +139,7 @@ P0에서는 “완전 분리 hidden editor”보다 **native editable text layer
 ### 11.1 overlay 정렬 규칙
 textarea는 글자색을 투명(`color: transparent`)으로 두고 캐럿·선택 영역만 보이게 한다. 같은 상자 안 아래층에 같은 텍스트를 잉크로 그린 overlay(`aria-hidden`)를 둔다. 두 층의 줄바꿈이 1px이라도 다르면 캐럿이 글자와 어긋나므로 다음을 지킨다.
 - 같은 font, size, line-height, padding, `white-space: pre-wrap`, `overflow-wrap`, `word-break`, `tab-size`
+- 한글은 띄어쓰기 단위로 줄을 바꾼다(`word-break: keep-all`). 띄어쓰기 없이 긴 문자열은 `overflow-wrap: break-word`로 끊는다
 - `font-kerning: none`, `font-variant-ligatures: none` — 글자마다 span을 나누면 span 경계에서 커닝/합자가 달라질 수 있다
 - 글자 span은 **inline** 그대로 두고 `position: relative`의 `left/top`으로만 흔든다. `transform`은 inline 요소에 적용되지 않고, `inline-block`으로 바꾸면 줄바꿈 위치가 달라진다. 그래서 **회전은 쓰지 않는다**(`docs/05` §2).
 - 문단(`\n` 단위)마다 블록 하나로 렌더링한다. 빈 문단은 폭 0 문자로 한 줄 높이를 유지한다.

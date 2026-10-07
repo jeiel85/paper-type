@@ -81,6 +81,11 @@ Chromium에서는 CDP `Input.imeSetComposition`/`Input.insertText`로 compositio
 - 60Hz에서 목표 평균 55fps 이상
 - 3000자/10000자 문서 각각 stress test
 
+### 측정 방법 (P0)
+`PERF=1 npx playwright test perf` — 3천/1만 자 문서에서 200타(Enter·Backspace 섞음)를 초당 약 12타로 입력하며 rAF 간격(fps), long task, `beforeinput` → 두 번째 rAF까지의 시간을 잰다. 마지막 값은 측정 방식상 한 프레임을 더 포함하므로 실제 "입력→화면 반영"보다 약 16ms 크다. headless Chromium 기준이라 실기기 수치를 대신하지 않는다.
+
+2026-10-07 측정(Windows, headless Chromium): 3천 자 58.6~59.9fps, 1만 자 57.7~59.6fps, long task 0, p95 37~42ms(한 프레임 포함). 첫 키 입력에서 오디오 장치를 여는 179ms long task가 있었고, 오디오를 유휴 시간에 미리 준비하도록 바꿔 없앴다.
+
 3000자를 제품 제한으로 반드시 둘 필요는 없다. PaperType은 내부 성능이 허용하는 범위에서 더 긴 글도 지원할 수 있도록 설계하되, 성능 테스트로 실제 제한을 결정한다.
 
 ## 7. 접근성
