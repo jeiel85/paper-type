@@ -70,7 +70,7 @@ export function StatusBar(props: Props) {
           <MotionIcon reduced={props.reduceMotion || props.systemReducedMotion} />
         </button>
         <a
-          className="icon-button"
+          className="icon-button repo-link"
           href="https://github.com/jeiel85/paper-type"
           target="_blank"
           rel="noopener noreferrer"
