@@ -1,0 +1,31 @@
+{
+  "name": "PaperType — 아날로그 타자기 글쓰기",
+  "short_name": "PaperType",
+  "description": "로컬 우선 아날로그 타자기 글쓰기 앱. 한글 조합 입력을 1급으로 다루는 타이핑 프로토타입.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#2b2622",
+  "theme_color": "#2b2622",
+  "lang": "ko",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
