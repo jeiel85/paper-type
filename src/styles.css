@@ -471,6 +471,11 @@ body {
   outline-offset: 2px;
 }
 
+a.icon-button {
+  color: var(--ui-text-dim);
+  text-decoration: none;
+}
+
 .icon-button[aria-pressed='false'] {
   color: var(--ui-text-dim);
 }

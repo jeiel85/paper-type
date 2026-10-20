@@ -10,3 +10,10 @@ createRoot(document.getElementById('root')!).render(
     <Writer />
   </StrictMode>,
 );
+
+// Offline shell + install support. Production only: in dev the SW would cache Vite's unbundled modules.
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch((err) => console.warn('Service worker registration failed:', err));
+  });
+}
